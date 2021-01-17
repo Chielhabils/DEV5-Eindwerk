@@ -28,6 +28,7 @@ app.get('/test', (req, res) => {
   res.status(200).send();
 });
 
+
 /*******************************/
 /*       Boon Endpoints        */
 /*******************************/
@@ -37,6 +38,23 @@ app.get('/test', (req, res) => {
  * @param uuid 
  * @returns  1 boon with uuid = req.params.uuid
  */
+app.get('/gods', async (req, res) => {
+  const result = await pg
+    .select('*')
+    .from('godTable')
+  res.json({
+    res: result
+  })
+  res.status(200).send()
+})
+
+app.get('/god/:uuid', async (req, res) => {
+  const result = await pg.select(['uuid', 'name', 'created_at']).from('godTable').where({uuid: req.params.uuid})
+  res.json({
+      res: result
+  })
+});
+
 app.get("/boon/:uuid", async (req, res) => {
   const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
   res.status(200);
@@ -63,6 +81,24 @@ app.post('/boon', async (req, res) => {
     .returning('*')
     .then((res) => {
       return res
+
+app.post('/boon', async (req, res) => {
+    const uuid = Helpers.generateUUID();
+    const result = await pg
+      .insert({
+        uuid,
+        godname: req.body.godname,
+        content: req.body.content,
+        created_at: new Date(),
+      })
+      .table('boonTable')
+      .returning('*')
+      .then((res) => {
+        return res
+      })
+    res.status(200);
+    res.json({
+      res: result
     })
   res.status(200);
   res.json({
@@ -82,6 +118,7 @@ app.get("/boons", async (req, res) => {
     })
 });
 
+
 /**
  * Updates a specific boon
  * @param uuid 
@@ -95,6 +132,7 @@ app.patch("/boon/:uuid", async (req, res) => {
       res.sendStatus(200);
     })
 });
+
 
 /**
  * Deletes a boon
