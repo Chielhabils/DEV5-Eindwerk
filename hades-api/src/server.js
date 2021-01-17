@@ -38,11 +38,12 @@ app.get('/test', (req, res) => {
  * @returns  1 boon with uuid = req.params.uuid
  */
 app.get("/boon/:uuid", async (req, res) => {
-  const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
-  res.status(200);
-  res.json({
-    res: result,
-  });
+    const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
+    if(result.length == 0){
+      res.status(404).send("Boon not found");
+    } else{
+      res.status(200).send(result[0]);
+    }
 });
 
 /**
@@ -102,13 +103,12 @@ app.patch("/boon/:uuid", async (req, res) => {
  * @returns nothing
  */
 app.delete("/boon", (req, res) => {
-  let amountOfProperties = Object.keys(req.body).length;
-  if(amountOfProperties == 1 && req.body.uuid){
-    pg('boonTable').where({ uuid: req.body.uuid }).del();
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(400);
-  }
+    pg('boonTable')
+      .where({ uuid: req.body.uuid })
+      .del()
+      .then(() => {
+        res.sendStatus(200);
+    })
 });
 
 
@@ -137,12 +137,42 @@ app.get('/gods', async (req, res) => {
  * @returns  1 god with uuid = req.params.uuid
  */
 app.get('/god/:uuid', async (req, res) => {
-  const result = await pg.select(['uuid', 'name', 'created_at']).from('godTable').where({uuid: req.params.uuid})
+  const result = await pg.select(['uuid', 'name', 'description', 'created_at']).from('godTable').where({uuid: req.params.uuid})
+  if(result.length == 0){
+    res.status(404).send("Boon not found");
+  } else{
+    res.status(200).send(result[0]);
+  }
+});
+
+app.post('/god', async (req, res) => {
+  const uuid = Helpers.generateUUID();
+  const result = await pg
+    .insert({
+      uuid,
+      name: req.body.name,
+      description: req.body.description,
+      created_at: new Date(),
+    })
+    .table('godTable')
+    .returning('*')
+    .then((res) => {
+      return res
+    })
+  res.status(200);
   res.json({
-      res: result
+    res: result
   })
 });
 
+app.delete("/god", (req, res) => {
+    pg('godTable')
+      .where({ uuid: req.body.uuid })
+      .del()
+      .then(() => {
+        res.sendStatus(200);
+    })
+});
 
 /*******************************/
 /*         Table inits         */
