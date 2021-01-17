@@ -32,34 +32,86 @@ app.get('/test', (req, res) => {
 /*       Boon Endpoints        */
 /*******************************/
 
+app.post("/boon", (req, res) => {
+  let uuid = Helpers.generateUUID();
+    pg.insert({
+      uuid: uuid,
+      godname: req.body.godname,
+      content: req.body.content,
+      created_at: new Date(),
+    })
+      .into("boonTable")
+      .then(() => {
+        res.json({ uuid: uuid });
+    });
+});
+
 /**
  * Get boon by UUID
  * @param uuid 
  * @returns  1 boon with uuid = req.params.uuid
  */
 app.get("/boon/:uuid", async (req, res) => {
-  const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
-  res.status(200);
-  res.json({
-    res: result,
-  });
+    const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
+    if(result.length == 0){
+      res.status(404).send("Boon not found");
+    } else{
+      res.status(200).send(result[0]);
+    }
 });
 
-/**
- * Post a boon to the boonTable 
- * @params godname, content 
- * @returns  the posted boon
- */
-app.post('/boon', async (req, res) => {
+app.get('/boons', async (req, res) => {
+  const result = await pg
+    .select('*')
+    .from('boonTable')
+  res.json({
+    res: result
+  })
+  res.status(200).send()
+})
+
+app.patch("/boon/:uuid", async (req, res) => {
+    pg('boonTable')
+      .where({uuid: req.params.uuid})
+      .update(req.body)
+      .then(() => {
+        res.sendStatus(200);
+    })
+});
+
+app.delete("/boon", (req, res) => {
+    pg('boonTable')
+      .where({ uuid: req.body.uuid })
+      .del()
+      .then(() => {
+        res.sendStatus(200);
+    })
+});
+
+/*******************************/
+/*       Gods Endpoints        */
+/*******************************/
+
+
+app.get('/god/:uuid', async (req, res) => {
+  const result = await pg.select(['uuid', 'name', 'description', 'created_at']).from('godTable').where({uuid: req.params.uuid})
+  if(result.length == 0){
+    res.status(404).send("Boon not found");
+  } else{
+    res.status(200).send(result[0]);
+  }
+});
+
+app.post('/god', async (req, res) => {
   const uuid = Helpers.generateUUID();
   const result = await pg
     .insert({
       uuid,
-      godname: req.body.godname,
-      content: req.body.content,
+      name: req.body.name,
+      description: req.body.description,
       created_at: new Date(),
     })
-    .table('boonTable')
+    .table('godTable')
     .returning('*')
     .then((res) => {
       return res
@@ -70,77 +122,13 @@ app.post('/boon', async (req, res) => {
   })
 });
 
-/**
- * Get all the boons
- * @param 
- * @returns  All the boons in the boonTable 
- */
-app.get("/boons", async (req, res) => {
-  await pg.from("boonTable").select("*").then(result => {
-      res.status(200);
-      res.send(result);
+app.delete("/god", (req, res) => {
+    pg('godTable')
+      .where({ uuid: req.body.uuid })
+      .del()
+      .then(() => {
+        res.sendStatus(200);
     })
-});
-
-/**
- * Updates a specific boon
- * @param uuid 
- * @returns  updated boon
- */
-app.patch("/boon/:uuid", async (req, res) => {
-  pg('boonTable')
-    .where({uuid: req.params.uuid})
-    .update(req.body)
-    .then(() => {
-      res.sendStatus(200);
-    })
-});
-
-/**
- * Deletes a boon
- * @param uuid 
- * @returns nothing
- */
-app.delete("/boon", (req, res) => {
-  let amountOfProperties = Object.keys(req.body).length;
-  if(amountOfProperties == 1 && req.body.uuid){
-    pg('boonTable').where({ uuid: req.body.uuid }).del();
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(400);
-  }
-});
-
-
-/*******************************/
-/*       Gods Endpoints        */
-/*******************************/
-
-/**
- * Get all the gods in the godTable
- * @param 
- * @returns  All the gods in the godTable
- */
-app.get('/gods', async (req, res) => {
-  const result = await pg
-    .select('*')
-    .from('godTable')
-  res.json({
-    res: result
-  })
-  res.status(200).send()
-})
-
-/**
- * Get a specific god by uuid
- * @param uuid 
- * @returns  1 god with uuid = req.params.uuid
- */
-app.get('/god/:uuid', async (req, res) => {
-  const result = await pg.select(['uuid', 'name', 'created_at']).from('godTable').where({uuid: req.params.uuid})
-  res.json({
-      res: result
-  })
 });
 
 
