@@ -23,8 +23,8 @@ describe('Test if POST /boon', () => {
       const response = await request
           .post('/boon')
           .send({
-              "godname" : "god number 1",
-              "content" : "Adds 50% attack speed"
+              godname : "god number 1",
+              content : "Adds 50% attack speed"
           });
           expect(response.status).toBe(200, done());
       })           
@@ -36,15 +36,15 @@ describe('Test if POST /boon', () => {
 
 describe("Test if boon is created and deleted", () => {
   let uuid;
-  it("Return 200 when record added to database and return an UUID", async (done) => {
+  it("Return 200 when record added to database and return a UUID", async (done) => {
     const response = await request
         .post('/boon')
         .send({
-            "godname" : "god number 1",
-            "content" : "Adds 50% attack speed"
+            godname : "god number 1",
+            content : "Adds 50% attack speed"
         });
         expect(response.status).toBe(200);
-        uuid = response.body.res[0].uuid;
+        uuid = response.body.uuid;
         done();
     }) ;
   it("Look for latest record in database", async (done) => {
@@ -56,42 +56,7 @@ describe("Test if boon is created and deleted", () => {
   it("Return 200 when boon is deleted", async (done) => {
       const response = await request.delete("/boon").send({ uuid: uuid });
       expect(response.status).toBe(200);
-      done();
-  });
-  it("Return 400 when no uuid is given when trying to delete a boon", async (done) => {
-      const response = await request.delete("/boon").send({});
-      expect(response.status).toBe(400);
       done();
   });
 });
 
-describe("Test if POST /boonTable and DELETE /boonTable work", () => {
-  let uuid;
-  it("Return 200 when record added to database and return an UUID", async (done) => {
-    const response = await request
-        .post('/boon')
-        .send({
-            "godname" : "god number 1",
-            "content" : "Adds 50% attack speed"
-        });
-        expect(response.status).toBe(200);
-        uuid = response.body.res[0].uuid;
-        done();
-    }) ;
-  it("Look for latest record in database", async (done) => {
-      const response = await request.get("/boon/" + uuid);
-      expect(response.status).toBe(200);
-      expect(typeof response.body).toBe("object");
-      done();
-  });
-  it("Return 200 when boon is deleted", async (done) => {
-      const response = await request.delete("/boon").send({ uuid: uuid });
-      expect(response.status).toBe(200);
-      done();
-  });
-  it("Return 400 when no uuid is given when trying to delete a boon", async (done) => {
-      const response = await request.delete("/boon").send({});
-      expect(response.status).toBe(400);
-      done();
-  });
-});
