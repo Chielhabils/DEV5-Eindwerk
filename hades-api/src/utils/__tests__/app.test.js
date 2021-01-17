@@ -36,7 +36,7 @@ describe('Test if POST /boon', () => {
 
 describe("Test if boon is created and deleted", () => {
   let uuid;
-  it("Return 200 when record added to database and return an UUID", async (done) => {
+  it("Return 200 when record added to database and return a UUID", async (done) => {
     const response = await request
         .post('/boon')
         .send({
