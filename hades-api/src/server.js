@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
 const Helpers = require('./utils/helpers.js');
@@ -30,22 +30,26 @@ app.get('/test', (req, res) => {
   res.status(200).send();
 });
 
-app.get('/', async (req, res) => {
-  const result = await pg.select(['uuid', 'name', 'created_at']).from('gods')
+app.get('/gods', async (req, res) => {
+  const result = await pg
+    .select('*')
+    .from('godTable')
+  res.json({
+    res: result
+  })
+  res.status(200).send()
+})
+
+app.get('/godTable/:uuid', async (req, res) => {
+  const result = await pg.select(['uuid', 'name', 'created_at']).from('Table').where({uuid: req.params.uuid})
   res.json({
       res: result
   })
 });
 
-app.get('/gods/:uuid', async (req, res) => {
-  const result = await pg.select(['uuid', 'name', 'created_at']).from('gods').where({uuid: req.params.uuid})
-  res.json({
-      res: result
-  })
-});
 
-app.get("/boon/:uuid", async (req, res) => {
-  const result = await pg.select(["uuid", "content", "created_at"]).from("boon").where({ uuid: req.params.uuid });
+app.get("/boonTable/:uuid", async (req, res) => {
+  const result = await pg.select(["uuid", "godname", "content", "created_at"]).from("boonTable").where({ uuid: req.params.uuid });
   res.status(200);
   res.json({
     res: result,
@@ -53,34 +57,47 @@ app.get("/boon/:uuid", async (req, res) => {
 });
 
 
-app.post('/postboon', async (req, res) => {
-  if(req.body.content.length > 100){
-    res.status(400);
-    res.json({});
-  } else{
-    let uuid = Helpers.generateUUID();
-    pg.insert({
-      uuid: uuid,
-      content: req.body.content,
-      created_at: new Date(),
-    }).into("boon").then(() => {
-      res.status(200);
-      res.json({ uuid: uuid});
-    });
-  }
+app.post('/boonTable', async (req, res) => {
+    // let uuid = Helpers.generateUUID();
+    // pg.insert({
+    //   uuid: uuid,
+    //   //godName: req.body.godName,
+    //   content: req.body.content,
+    //   created_at: new Date(),
+    // }).into('boon').then(() => {
+    //   res.status(200);
+    //   res.json({ uuid: uuid});
+    // });
+    const uuid = Helpers.generateUUID();
+    const result = await pg
+      .insert({
+        uuid,
+        godname: req.body.godname,
+        content: req.body.content,
+        created_at: new Date(),
+      })
+      .table('boonTable')
+      .returning('*')
+      .then((res) => {
+        return res
+      })
+    res.status(200);
+    res.json({
+      res: result
+    })
 });
 
-app.get("/boons", async (req, res) => {
-  await pg.from("boon").select("*").then(result => {
+app.get("/boonTable", async (req, res) => {
+  await pg.from("boonTable").select("*").then(result => {
       res.status(200);
       res.send(result);
     })
 });
 
-app.delete("/deleteboon", (req, res) => {
+app.delete("/boonTable", (req, res) => {
   let amountOfProperties = Object.keys(req.body).length;
   if(amountOfProperties == 1 && req.body.uuid){
-    pg('boon').where({ uuid: req.body.uuid }).del();
+    pg('boonTable').where({ uuid: req.body.uuid }).del();
     res.sendStatus(200);
   } else {
     res.sendStatus(400);
@@ -88,26 +105,10 @@ app.delete("/deleteboon", (req, res) => {
 });
 
 async function initialiseTables() {
-  await pg.schema.hasTable('boon').then(async (exists) => {
+  await pg.schema.hasTable('godTable').then(async (exists) => {
     if (!exists) {
       await pg.schema
-        .createTable('boon', (table) => {
-          table.increments();
-          table.uuid('uuid');
-          table.string('content');
-          table.string('god-id');
-          table.timestamps(true, true);
-        })
-        .then(async () => {
-          console.log('created table boon');
-        });
-
-    }
-  });
-  await pg.schema.hasTable('gods').then(async (exists) => {
-    if (!exists) {
-      await pg.schema
-        .createTable('gods', (table) => {
+        .createTable('godTable', (table) => {
           table.increments();
           table.uuid('uuid');
           table.string('name');
@@ -115,15 +116,36 @@ async function initialiseTables() {
           table.timestamps(true, true);
         })
         .then(async () => {
-          console.log('created table gods');
+          console.log('created table god');
           for (let i = 0; i < 10; i++) {
             const uuid = Helpers.generateUUID();
-            await pg.table('gods').insert({ uuid, title: `random element number ${i}` })
+            await pg.table('godTable').insert({ 
+              uuid, 
+              name: `god number ${i}`,
+              description: 'A god of Olympus'
+            })
           }
         });
         
     }
   });
+
+  await pg.schema.hasTable('boonTable').then(async (exists) => {
+    if (!exists) {
+      await pg.schema
+        .createTable('boonTable', (table) => {
+          table.increments();
+          table.uuid('uuid');
+          table.string('godname');
+          table.string('content');
+          table.timestamps(true, true);
+        })
+        .then(async () => {
+          console.log('created table boon');
+        });
+    }
+  });
+  
 }
 initialiseTables()
 
