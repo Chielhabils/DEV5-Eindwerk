@@ -40,16 +40,16 @@ app.get('/gods', async (req, res) => {
   res.status(200).send()
 })
 
-app.get('/godTable/:uuid', async (req, res) => {
-  const result = await pg.select(['uuid', 'name', 'created_at']).from('Table').where({uuid: req.params.uuid})
+app.get('/god/:uuid', async (req, res) => {
+  const result = await pg.select(['uuid', 'name', 'created_at']).from('godTable').where({uuid: req.params.uuid})
   res.json({
       res: result
   })
 });
 
 
-app.get("/boonTable/:uuid", async (req, res) => {
-  const result = await pg.select(["uuid", "godname", "content", "created_at"]).from("boonTable").where({ uuid: req.params.uuid });
+app.get("/boon/:uuid", async (req, res) => {
+  const result = await pg.select(['uuid', 'godname', 'content', 'created_at']).from("boonTable").where({uuid: req.params.uuid});
   res.status(200);
   res.json({
     res: result,
@@ -57,17 +57,7 @@ app.get("/boonTable/:uuid", async (req, res) => {
 });
 
 
-app.post('/boonTable', async (req, res) => {
-    // let uuid = Helpers.generateUUID();
-    // pg.insert({
-    //   uuid: uuid,
-    //   //godName: req.body.godName,
-    //   content: req.body.content,
-    //   created_at: new Date(),
-    // }).into('boon').then(() => {
-    //   res.status(200);
-    //   res.json({ uuid: uuid});
-    // });
+app.post('/boon', async (req, res) => {
     const uuid = Helpers.generateUUID();
     const result = await pg
       .insert({
@@ -87,14 +77,23 @@ app.post('/boonTable', async (req, res) => {
     })
 });
 
-app.get("/boonTable", async (req, res) => {
+app.get("/boons", async (req, res) => {
   await pg.from("boonTable").select("*").then(result => {
       res.status(200);
       res.send(result);
     })
 });
 
-app.delete("/boonTable", (req, res) => {
+app.patch("/boon/:uuid", async (req, res) => {
+  pg('boonTable')
+    .where({uuid: req.params.uuid})
+    .update(req.body)
+    .then(() => {
+      res.sendStatus(200);
+    })
+});
+
+app.delete("/boon", (req, res) => {
   let amountOfProperties = Object.keys(req.body).length;
   if(amountOfProperties == 1 && req.body.uuid){
     pg('boonTable').where({ uuid: req.body.uuid }).del();
