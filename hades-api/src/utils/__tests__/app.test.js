@@ -44,7 +44,7 @@ describe("Test if boon is created and deleted", () => {
             content : "Adds 50% attack speed"
         });
         expect(response.status).toBe(200);
-        uuid = response.body.res[0].uuid;
+        uuid = response.body.uuid;
         done();
     }) ;
   it("Look for latest record in database", async (done) => {

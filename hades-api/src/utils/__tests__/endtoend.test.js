@@ -36,7 +36,7 @@ describe("The end-to-end test", () => {
                     content : "Adds 50% attack speed"
             });
             expect(response.status).toBe(200);
-            boonID = response.body.res[0].uuid;
+            boonID = response.body.uuid;
             done();
     })
     it("gets the newly added boon", async(done) => {
@@ -87,3 +87,4 @@ describe("The end-to-end test", () => {
             done();
     })
 });
+

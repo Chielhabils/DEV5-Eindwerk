@@ -32,6 +32,20 @@ app.get('/test', (req, res) => {
 /*       Boon Endpoints        */
 /*******************************/
 
+app.post("/boon", (req, res) => {
+  let uuid = Helpers.generateUUID();
+    pg.insert({
+      uuid: uuid,
+      godname: req.body.godname,
+      content: req.body.content,
+      created_at: new Date(),
+    })
+      .into("boonTable")
+      .then(() => {
+        res.json({ uuid: uuid });
+    });
+});
+
 /**
  * Get boon by UUID
  * @param uuid 
@@ -46,62 +60,25 @@ app.get("/boon/:uuid", async (req, res) => {
     }
 });
 
-/**
- * Post a boon to the boonTable 
- * @params godname, content 
- * @returns  the posted boon
- */
-app.post('/boon', async (req, res) => {
-  const uuid = Helpers.generateUUID();
+app.get('/boons', async (req, res) => {
   const result = await pg
-    .insert({
-      uuid,
-      godname: req.body.godname,
-      content: req.body.content,
-      created_at: new Date(),
-    })
-    .table('boonTable')
-    .returning('*')
-    .then((res) => {
-      return res
-    })
-  res.status(200);
+    .select('*')
+    .from('boonTable')
   res.json({
     res: result
   })
-});
+  res.status(200).send()
+})
 
-/**
- * Get all the boons
- * @param 
- * @returns  All the boons in the boonTable 
- */
-app.get("/boons", async (req, res) => {
-  await pg.from("boonTable").select("*").then(result => {
-      res.status(200);
-      res.send(result);
-    })
-});
-
-/**
- * Updates a specific boon
- * @param uuid 
- * @returns  updated boon
- */
 app.patch("/boon/:uuid", async (req, res) => {
-  pg('boonTable')
-    .where({uuid: req.params.uuid})
-    .update(req.body)
-    .then(() => {
-      res.sendStatus(200);
+    pg('boonTable')
+      .where({uuid: req.params.uuid})
+      .update(req.body)
+      .then(() => {
+        res.sendStatus(200);
     })
 });
 
-/**
- * Deletes a boon
- * @param uuid 
- * @returns nothing
- */
 app.delete("/boon", (req, res) => {
     pg('boonTable')
       .where({ uuid: req.body.uuid })
@@ -111,31 +88,11 @@ app.delete("/boon", (req, res) => {
     })
 });
 
-
 /*******************************/
 /*       Gods Endpoints        */
 /*******************************/
 
-/**
- * Get all the gods in the godTable
- * @param 
- * @returns  All the gods in the godTable
- */
-app.get('/gods', async (req, res) => {
-  const result = await pg
-    .select('*')
-    .from('godTable')
-  res.json({
-    res: result
-  })
-  res.status(200).send()
-})
 
-/**
- * Get a specific god by uuid
- * @param uuid 
- * @returns  1 god with uuid = req.params.uuid
- */
 app.get('/god/:uuid', async (req, res) => {
   const result = await pg.select(['uuid', 'name', 'description', 'created_at']).from('godTable').where({uuid: req.params.uuid})
   if(result.length == 0){
