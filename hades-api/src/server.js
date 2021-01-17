@@ -34,7 +34,7 @@ app.get('/test', (req, res) => {
 
 
 /**
- * Post boon tto boonTable
+ * Post boon to boonTable
  * @params godname, uuid, content
  * @returns 
  */
@@ -84,7 +84,7 @@ app.get('/boons', async (req, res) => {
 
 
 /**
- * Updates specific boom
+ * Updates specific boon
  * @param uuid 
  * @returns
  */
@@ -92,9 +92,6 @@ app.patch("/boon/:uuid", async (req, res) => {
     pg('boonTable')
       .where({uuid: req.params.uuid})
       .update(req.body)
-      .then(() => {
-        res.sendStatus(200);
-    })
 });
 
 
@@ -111,6 +108,7 @@ app.delete("/boon", (req, res) => {
         res.sendStatus(200);
     })
 });
+
 
 /*******************************/
 /*       Gods Endpoints        */
